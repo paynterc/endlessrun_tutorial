@@ -6,7 +6,7 @@ var mediaManager;
 var levelManager;
 //
 //
-var useLandscape = false;
+var useLandscape = true;
 window.onload = function() {
     isMobile = navigator.userAgent.indexOf("Mobile");
     isMobile = (isMobile != -1) ? true : false;
