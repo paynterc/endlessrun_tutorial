@@ -35,9 +35,27 @@ var StateMain = {
 		
 		// Add a listener for mouse down input.
 		game.input.onDown.add(this.mouseDown, this);
+                
+        // Start the physics engine
+        game.physics.startSystem(Phaser.Physics.ARCADE);
+        
+        // Enable the physics on the hero and ground.
+		game.physics.enable(this.hero, Phaser.Physics.ARCADE);
+		game.physics.enable(this.ground, Phaser.Physics.ARCADE);
+		
+		
+		// Add gravity			
+		this.hero.body.gravity.y = 200;	
+		this.hero.body.collideWorldBounds = true;
+		this.ground.body.immovable = true;
         
     },
-    update: function() {},
+    update: function() {
+    
+    	// Allow collisions between hero and ground.
+		game.physics.arcade.collide(this.hero, this.ground);
+    
+    },
     mouseDown: function() {
 
  		// Stop listening for mouse down for now
@@ -63,6 +81,9 @@ var StateMain = {
 	   	// Stop listening for mouse up for now.
 	    game.input.onUp.remove(this.mouseUp, this);
 	    
+	    // Call our jump function
+	    this.doJump();
+	    
 	    // Destroy the timer
         game.time.events.remove(this.timer);
         
@@ -74,4 +95,8 @@ var StateMain = {
 		game.input.onDown.add(this.mouseDown, this);
 	   
 	},
+	doJump: function() {
+		// We only want to the y velocity and we want to set it to a negative number to make it go upwards.
+        this.hero.body.velocity.y = -this.power * 16;
+    },
 }
