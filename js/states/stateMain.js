@@ -59,6 +59,10 @@ var StateMain = {
     
     	// Allow collisions between hero and ground.
 		game.physics.arcade.collide(this.hero, this.ground);
+		
+		// Collide the hero with the blocks.
+        game.physics.arcade.collide(this.hero, this.blocks, this.delayOver, null, this);
+        
     
     },
     mouseDown: function() {
@@ -112,5 +116,16 @@ var StateMain = {
             var block = game.add.sprite(bStartX, bStartY - ( i * 64 ), "block");
             this.blocks.add(block);
         }
+        
+        		// Add this to the makeBlocks function
+	    // Loop through each block
+        // and apply physics
+        this.blocks.forEach(function(block) {
+            //enable physics
+            game.physics.enable(block, Phaser.Physics.ARCADE);
+            block.body.velocity.x = -150;
+
+        });
+        
     },
 }
