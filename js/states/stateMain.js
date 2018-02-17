@@ -48,6 +48,11 @@ var StateMain = {
 		this.hero.body.gravity.y = 200;	
 		this.hero.body.collideWorldBounds = true;
 		this.ground.body.immovable = true;
+		
+		// Add blocks
+		this.blocks = game.add.group();
+        this.makeBlocks(); // Now write the makeBlocks function.
+		
         
     },
     update: function() {
@@ -98,5 +103,14 @@ var StateMain = {
 	doJump: function() {
 		// We only want to the y velocity and we want to set it to a negative number to make it go upwards.
         this.hero.body.velocity.y = -this.power * 16;
+    },
+	makeBlocks: function() {
+		var bStartX=game.width-64, bStartY=game.height-32-64;
+	
+        var wallHeight=game.rnd.integerInRange(2, 6);
+        for (var i = 0; i < wallHeight; i++) {
+            var block = game.add.sprite(bStartX, bStartY - ( i * 64 ), "block");
+            this.blocks.add(block);
+        }
     },
 }
