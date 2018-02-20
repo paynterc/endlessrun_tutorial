@@ -86,17 +86,18 @@ var StateMain = {
     	game.input.onDown.remove(this.mouseDown, this);
         
         // This timer runs 1000 times a second. This will give us a smooth power bar effect.
-        this.timer = game.time.events.loop(Phaser.Timer.SECOND / 1000, this.increasePower, this);
+        this.timer = game.time.events.loop(Phaser.Timer.SECOND / 250, this.increasePower, this);
 
 		// Start listening for mouse up.
         game.input.onUp.add(this.mouseUp, this);
         
     },
     increasePower: function() {
+    	var maxPower = 25;
         this.power++;
-        this.powerBar.width = this.power;
-        if (this.power > this.pwidth) {
-            this.power = this.pwidth;
+        this.powerBar.width = 128 *  (this.power/maxPower);
+        if (this.power > maxPower) {
+            this.power = maxPower;
         }
     },
     mouseUp:function()
@@ -130,9 +131,17 @@ var StateMain = {
 	
 		var bStartX=game.width, bStartY=game.height-32-64;
 	
-        var wallHeight=game.rnd.integerInRange(2, 6);
+        var rndPos, block;
+        
+        block = game.add.sprite(bStartX, bStartY, "block");
+        this.blocks.add(block);
+        block = game.add.sprite(bStartX, bStartY - ( 6 * 64 ), "block");
+        this.blocks.add(block);
+
+        var wallHeight=game.rnd.integerInRange(2, 4);
         for (var i = 0; i < wallHeight; i++) {
-            var block = game.add.sprite(bStartX, bStartY - ( i * 64 ), "block");
+        	rndPos = game.rnd.integerInRange(0,7);
+            block = game.add.sprite(bStartX, bStartY - ( rndPos * 64 ), "block");
             this.blocks.add(block);
         }
         
