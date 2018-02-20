@@ -55,6 +55,9 @@ var StateMain = {
 		
 		// Record the initial position of the hero.
 		this.startY = this.hero.y;
+		
+		// Use this to prevent clicking when game is over.
+		this.clickLock = false;
 			
     },
     update: function() {
@@ -76,6 +79,10 @@ var StateMain = {
     
     },
     mouseDown: function() {
+    
+    	if (this.clickLock) {
+            return;
+        }
     
 		// If we're not on the ground, no jumping
 		if (this.hero.y != this.startY) {
@@ -157,6 +164,10 @@ var StateMain = {
         
     },
     delayOver: function() {
-
+        this.clickLock = true;
+        game.time.events.add(Phaser.Timer.SECOND, this.gameOver, this);
+    },
+    gameOver: function() {
+        game.state.start("StateOver");
     },
 }
