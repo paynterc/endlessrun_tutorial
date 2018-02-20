@@ -64,6 +64,14 @@ var StateMain = {
         game.physics.arcade.collide(this.hero, this.blocks, this.delayOver, null, this);
         
     
+    	// Get the first child. Add this to the update function.
+        var fchild = this.blocks.getChildAt(0);
+        // If off the screen reset the blocks.
+        if (fchild.x < 0) {
+            this.makeBlocks();
+        }
+
+    
     },
     mouseDown: function() {
 
@@ -109,6 +117,10 @@ var StateMain = {
         this.hero.body.velocity.y = -this.power * 16;
     },
 	makeBlocks: function() {
+	
+		// Remove all the blocks from the group. You don't want to fill up memory.
+        this.blocks.removeAll();
+	
 		var bStartX=game.width-64, bStartY=game.height-32-64;
 	
         var wallHeight=game.rnd.integerInRange(2, 6);
@@ -127,5 +139,8 @@ var StateMain = {
 
         });
         
+    },
+    delayOver: function() {
+
     },
 }
