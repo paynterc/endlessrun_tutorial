@@ -53,7 +53,9 @@ var StateMain = {
 		this.blocks = game.add.group();
         this.makeBlocks(); // Now write the makeBlocks function.
 		
-        
+		// Record the initial position of the hero.
+		this.startY = this.hero.y;
+			
     },
     update: function() {
     
@@ -67,13 +69,18 @@ var StateMain = {
     	// Get the first child. Add this to the update function.
         var fchild = this.blocks.getChildAt(0);
         // If off the screen reset the blocks.
-        if (fchild.x < 0) {
+        if (fchild.x + 64 < 0) {
             this.makeBlocks();
         }
 
     
     },
     mouseDown: function() {
+    
+		// If we're not on the ground, no jumping
+		if (this.hero.y != this.startY) {
+			return;
+		}
 
  		// Stop listening for mouse down for now
     	game.input.onDown.remove(this.mouseDown, this);
@@ -121,7 +128,7 @@ var StateMain = {
 		// Remove all the blocks from the group. You don't want to fill up memory.
         this.blocks.removeAll();
 	
-		var bStartX=game.width-64, bStartY=game.height-32-64;
+		var bStartX=game.width, bStartY=game.height-32-64;
 	
         var wallHeight=game.rnd.integerInRange(2, 6);
         for (var i = 0; i < wallHeight; i++) {
