@@ -2,7 +2,9 @@ var StateMain = {
     preload: function() {
         
         game.load.image("ground", "images/main/ground.png");
-        game.load.image("hero", "images/main/hero.png");
+        //game.load.image("hero", "images/main/hero.png");
+        game.load.spritesheet("hero", 'images/main/hero_anim.png', 32, 32);
+
         game.load.image("bar", "images/main/powerbar.png");
         game.load.image("block", "images/main/block.png");
     
@@ -23,6 +25,10 @@ var StateMain = {
         // Add the ground and the hero to the game stage.
         this.ground = game.add.sprite(0, game.height -32, "ground");
 		this.hero = game.add.sprite(game.width * .2, this.ground.y - this.pheight, "hero");
+		this.hero.animations.add('run',this.makeArray(0,9),12,true);
+		this.hero.animations.add('jump',[0],12,false);
+		this.hero.animations.add('die',this.makeArray(10,16),12,false);
+		this.hero.animations.play('run');
 		
 		// Add the power bar at the top of the hero graphic. Add this code AFTER the this.hero line
 		this.powerBar = game.add.sprite(this.hero.x, this.hero.y-20, "bar");
@@ -60,13 +66,22 @@ var StateMain = {
 		this.clickLock = false;
 			
     },
+	makeArray:function(start,end) {
+        var myArray=[];
+        for (var i = start; i < end; i++) {
+            myArray.push(i);
+        }
+        return myArray;
+    },
     update: function() {
     
     	// Allow collisions between hero and ground.
-		game.physics.arcade.collide(this.hero, this.ground);
+        game.physics.arcade.collide(this.hero, this.ground, this.onGround, null, this);
 		
 		// Collide the hero with the blocks.
         game.physics.arcade.collide(this.hero, this.blocks, this.delayOver, null, this);
+        
+
         
     
     	// Get the first child. Add this to the update function.
@@ -107,12 +122,12 @@ var StateMain = {
             this.power = maxPower;
         }
     },
-    mouseUp:function()
-	{
+    mouseUp:function() {
 
 	   	// Stop listening for mouse up for now.
 	    game.input.onUp.remove(this.mouseUp, this);
-	    
+	                    this.hero.animations.play('jump');
+
 	    // Call our jump function
 	    this.doJump();
 	    
@@ -130,6 +145,13 @@ var StateMain = {
 	doJump: function() {
 		// We only want to the y velocity and we want to set it to a negative number to make it go upwards.
         this.hero.body.velocity.y = -this.power * 16;
+
+    },
+	onGround: function() {
+        if (this.hero)
+        {
+            this.hero.animations.play('run');
+        }        
     },
 	makeBlocks: function() {
 	
@@ -164,7 +186,11 @@ var StateMain = {
         
     },
     delayOver: function() {
+    	if(this.clicklock){
+    		return;
+    	}
         this.clickLock = true;
+        this.hero.animations.play('die');
         game.time.events.add(Phaser.Timer.SECOND, this.gameOver, this);
     },
     gameOver: function() {
