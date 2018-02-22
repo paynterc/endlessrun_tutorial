@@ -7,6 +7,11 @@ var StateMain = {
 
         game.load.image("bar", "images/main/powerbar.png");
         game.load.image("block", "images/main/block.png");
+        
+        game.load.audio("jump", "audio/sfx/jump.wav");
+        game.load.audio("land", "audio/sfx/land.wav");
+        game.load.audio("die", "audio/sfx/die.wav");
+
     
     },
     create: function() {
@@ -64,6 +69,14 @@ var StateMain = {
 		
 		// Use this to prevent clicking when game is over.
 		this.clickLock = false;
+		
+		this.jumpSound = game.add.audio('jump');
+		this.landSound = game.add.audio('land');
+		this.dieSound = game.add.audio('die');
+		
+		// Keep track of if the player is on the ground so we only play the landing sound once
+		this.landed=true;
+
 			
     },
 	makeArray:function(start,end) {
@@ -80,10 +93,7 @@ var StateMain = {
 		
 		// Collide the hero with the blocks.
         game.physics.arcade.collide(this.hero, this.blocks, function(obj1,obj2){ this.collisionHandler(obj1,obj2); }, null, this);
-        
-
-        
-    
+            
     	// Get the first child. Add this to the update function.
         var fchild = this.blocks.getChildAt(0);
         // If off the screen reset the blocks.
@@ -95,7 +105,7 @@ var StateMain = {
     },
     mouseDown: function() {
     
-    	if (this.clickLock) {
+    	if (this.clickLock === true) {
             return;
         }
     
@@ -143,13 +153,22 @@ var StateMain = {
 	   
 	},
 	doJump: function() {
-		// We only want to the y velocity and we want to set it to a negative number to make it go upwards.
+	
+		this.jumpSound.play();
+		this.landed=false;
+
+		// We only want to the y velocity and we want to set it to a negative number to make it go up.
         this.hero.body.velocity.y = -this.power * 16;
 
     },
 	onGround: function() {
         if (this.hero)
         {
+        	if(!this.landed){
+        		this.landed=true;
+        		this.landSound.play();
+        	}
+
             this.hero.animations.play('run');
         }        
     },
@@ -193,9 +212,11 @@ var StateMain = {
     	return true;
     },
     delayOver: function() {
-    	if(this.clicklock){
+    	if(this.clicklock === true){
     		return;
     	}
+    	
+    	this.dieSound.play();
         this.clickLock = true;
         this.hero.animations.play('die');
         game.time.events.add(Phaser.Timer.SECOND, this.gameOver, this);
