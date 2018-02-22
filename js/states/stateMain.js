@@ -79,7 +79,7 @@ var StateMain = {
         game.physics.arcade.collide(this.hero, this.ground, this.onGround, null, this);
 		
 		// Collide the hero with the blocks.
-        game.physics.arcade.collide(this.hero, this.blocks, this.delayOver, null, this);
+        game.physics.arcade.collide(this.hero, this.blocks, function(obj1,obj2){ this.collisionHandler(obj1,obj2); }, null, this);
         
 
         
@@ -184,6 +184,13 @@ var StateMain = {
 
         });
         
+    },
+    collisionHandler: function(hero,block) {
+    	// If the hero has collided with the front of the block, end the game.
+    	if(hero.x + hero.width <= block.x){
+			this.delayOver();	
+    	}
+    	return true;
     },
     delayOver: function() {
     	if(this.clicklock){
