@@ -25,7 +25,7 @@ var StateLoad = {
         //preload images
         // game.load.image("heart", "images/main/heart.png");
         this.loadMain("heart");
-        game.load.audio("backgroundMusic", "audio/background/piano.mp3");
+        game.load.audio("backgroundMusic", "audio/background/LunarMoth.wav");
         //game.load.audio("elephant","audio/sfx/elephant.mp3");
         this.loadSFX("elephant");
     },

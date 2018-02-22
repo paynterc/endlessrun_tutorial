@@ -70,9 +70,15 @@ var StateMain = {
 		// Use this to prevent clicking when game is over.
 		this.clickLock = false;
 		
-		this.jumpSound = game.add.audio('jump');
-		this.landSound = game.add.audio('land');
-		this.dieSound = game.add.audio('die');
+		this.jumpSound = game.add.audio('jump',.25);
+		this.landSound = game.add.audio('land',.25);
+		this.dieSound = game.add.audio('die',.25);
+				
+// 		this.jumpSound.volume = 0.25;
+// 		this.landSound.volume = 0.25;
+// 		this.dieSound.volume = 0.25;
+
+
 		
 		// Keep track of if the player is on the ground so we only play the landing sound once
 		this.landed=true;

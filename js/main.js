@@ -29,7 +29,7 @@ window.onload = function() {
     model = new Model();
     controller = new Controller();
     mediaManager = new MediaManager();
-    model.devMode = true;
+    model.devMode = false;
     //
     //
     //
