@@ -132,10 +132,17 @@ var StateMain = {
     },
     increasePower: function() {
     	var maxPower = 25;
+
         this.power++;
         this.powerBar.width = 128 *  (this.power/maxPower);
         if (this.power > maxPower) {
             this.power = maxPower;
+        }else{
+
+        	this.jumpSound.play();
+        	// Creates a rising pitch effect. You have to play the sound first. See above.
+			this.jumpSound._sound.playbackRate.value = this.power/maxPower;
+
         }
     },
     mouseUp:function() {
@@ -160,7 +167,8 @@ var StateMain = {
 	},
 	doJump: function() {
 	
-		this.jumpSound.play();
+        	this.jumpSound.play();
+
 		this.landed=false;
 
 		// We only want to the y velocity and we want to set it to a negative number to make it go up.
