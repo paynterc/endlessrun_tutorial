@@ -12,6 +12,11 @@ var StateMain = {
         game.load.audio("land", "audio/sfx/land.wav");
         game.load.audio("die", "audio/sfx/die.wav");
 
+        game.load.image("bg0", "images/main/bg0.png");
+        game.load.image("bg1", "images/main/bg1.png");
+        game.load.image("bg2", "images/main/bg2.png");
+
+    
     
     },
     create: function() {
@@ -26,6 +31,29 @@ var StateMain = {
         // A variable to contain jump power.
         this.power = 0;
 
+    	// Add your background images first! Images appear in the order you added them, back to front.    	
+    	// Create a tilesprite (x, y, width, height, key)
+    	this.bg0 = this.game.add.tileSprite(0,
+			game.height - this.game.cache.getImage('bg0').height,
+			game.width,
+			game.cache.getImage('bg0').height,
+			'bg0'
+		);
+
+
+    	this.bg1 = this.game.add.tileSprite(0,
+			game.height - this.game.cache.getImage('bg1').height,
+			game.width,
+			game.cache.getImage('bg1').height,
+			'bg1'
+		);
+		
+		this.bg2 = this.game.add.tileSprite(0,
+			game.height - this.game.cache.getImage('bg2').height,
+			game.width,
+			game.cache.getImage('bg2').height,
+			'bg2'
+		);
         
         // Add the ground and the hero to the game stage.
         this.ground = game.add.sprite(0, game.height -32, "ground");
@@ -107,7 +135,11 @@ var StateMain = {
             this.makeBlocks();
         }
 
-    
+        
+        this.bg0.tilePosition.x -= 0.05;
+        this.bg1.tilePosition.x -= 0.3;
+        this.bg2.tilePosition.x -= 0.75;
+
     },
     mouseDown: function() {
     
