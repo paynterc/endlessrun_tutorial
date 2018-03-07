@@ -56,12 +56,14 @@ var StateMain = {
 		);
         
         // Add the ground and the hero to the game stage.
-        this.ground = game.add.sprite(0, game.height -32, "ground");
-		this.hero = game.add.sprite(game.width * .2, this.ground.y - this.pheight, "hero");
-		this.hero.animations.add('run',this.makeArray(0,9),12,true);
-		this.hero.animations.add('jump',[0],12,false);
-		this.hero.animations.add('die',this.makeArray(10,16),12,false);
-		this.hero.animations.play('run');
+        //this.ground = game.add.sprite(0, game.height -32, "ground");
+        this.ground = new Phaser.Sprite(game, 0, game.height - 32, "ground", 0);
+    	game.add.existing(this.ground);
+
+
+		// Hero is its own class now. See Hero.js.
+		this.hero = new Hero(game.width * .2, this.ground.y - this.pheight);
+
 		
 		// Add the power bar at the top of the hero graphic. Add this code AFTER the this.hero line
 		this.powerBar = game.add.sprite(this.hero.x, this.hero.y-20, "bar");
@@ -109,17 +111,11 @@ var StateMain = {
 
 		
 		// Keep track of if the player is on the ground so we only play the landing sound once
-		this.landed=true;
+		this.hero.landed=true;
 
 			
     },
-	makeArray:function(start,end) {
-        var myArray=[];
-        for (var i = start; i < end; i++) {
-            myArray.push(i);
-        }
-        return myArray;
-    },
+
     update: function() {
     
     	// Allow collisions between hero and ground.
@@ -184,7 +180,7 @@ var StateMain = {
 	                    this.hero.animations.play('jump');
 
 	    // Call our jump function
-	    this.doJump();
+	    this.hero.doJump(this.power);
 	    
 	    // Destroy the timer
         game.time.events.remove(this.timer);
@@ -197,21 +193,11 @@ var StateMain = {
 		game.input.onDown.add(this.mouseDown, this);
 	   
 	},
-	doJump: function() {
-	
-        	this.jumpSound.play();
-
-		this.landed=false;
-
-		// We only want to the y velocity and we want to set it to a negative number to make it go up.
-        this.hero.body.velocity.y = -this.power * 16;
-
-    },
 	onGround: function() {
         if (this.hero)
         {
-        	if(!this.landed){
-        		this.landed=true;
+        	if(!this.hero.landed){
+        		this.hero.landed=true;
         		this.landSound.play();
         	}
 
