@@ -1,3 +1,6 @@
+// StateMain is an object literal. Javascript object syntax is like this: { key: value, otherKey: otherValue };
+// Here, the functions are properties of the object, so the syntax is a little different from other function declarations.
+// We use myFunction: function() instead of function myFunction()
 var StateMain = {
     preload: function() {
         
@@ -27,6 +30,9 @@ var StateMain = {
 		// Variables to contain the player height and width.
 		this.pheight = 32;
 		this.pwidth = 32;
+        
+        // I'm just putting this here to demonstrate how you can access state variables when in other classes.
+        this.myvar = "HEYTHERE";
         
         // A variable to contain jump power.
         this.power = 0;
@@ -80,14 +86,11 @@ var StateMain = {
         // Start the physics engine
         game.physics.startSystem(Phaser.Physics.ARCADE);
         
-        // Enable the physics on the hero and ground.
-		game.physics.enable(this.hero, Phaser.Physics.ARCADE);
+        // Enable the physics on the ground.
 		game.physics.enable(this.ground, Phaser.Physics.ARCADE);
 		
 		
-		// Add gravity			
-		this.hero.body.gravity.y = 200;	
-		this.hero.body.collideWorldBounds = true;
+		//
 		this.ground.body.immovable = true;
 		
 		// Add blocks
