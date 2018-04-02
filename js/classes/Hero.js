@@ -35,7 +35,7 @@ class Hero extends Phaser.Sprite {
     	this.landed=false;
 		// We only want to the y velocity and we want to set it to a negative number to make it go up.
         this.body.velocity.y = -power * 8;
-        this.body.velocity.x = power;
+        //this.body.velocity.x = power;
 
         
         // You can access variables in the StateMain

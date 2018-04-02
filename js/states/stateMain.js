@@ -9,7 +9,7 @@ var StateMain = {
         game.load.spritesheet("hero", 'images/main/hero_anim.png', 32, 32);
 
         game.load.image("bar", "images/main/powerbar.png");
-        game.load.image("block", "images/main/block.png");
+        game.load.image("block", "images/main/Rocck.png");
         
         game.load.audio("jump", "audio/sfx/jump.wav");
         game.load.audio("land", "audio/sfx/land.wav");
@@ -70,7 +70,7 @@ var StateMain = {
 
 		// Hero is its own class now. See Hero.js.
 		this.hero = new Hero(game.width * .2, this.ground.y - this.pheight);
-
+        //this.hero.body.friction.x=0;
 		
 		// Add the power bar at the top of the hero graphic. Add this code AFTER the this.hero line
 		this.powerBar = game.add.sprite(this.hero.x, this.hero.y-20, "bar");
@@ -95,7 +95,7 @@ var StateMain = {
 		this.ground.body.immovable = true;
 		
 		
-				this.enemies = game.add.group();
+        this.enemies = game.add.group();
         //this.makeEnemies();
 		
 		// Add blocks
@@ -108,7 +108,7 @@ var StateMain = {
 		
 		// Use this to prevent clicking when game is over.
 		this.clickLock = false;
-		
+
 		this.jumpSound = game.add.audio('jump',.25);
 		this.landSound = game.add.audio('land',.25);
 		this.dieSound = game.add.audio('die',.25);
@@ -122,7 +122,13 @@ var StateMain = {
 		// Keep track of if the player is on the ground so we only play the landing sound once
 		this.hero.landed=true;
 
+        this.bgv0=0.3;
+        this.bgv1=0.5;
+        this.bgv2=0.75;
 
+
+        // Create blocks on a timer.
+        this.timer = game.time.events.loop(Phaser.Timer.SECOND * 5, this.makeBlocks, this);
 
 			
     },
@@ -134,23 +140,11 @@ var StateMain = {
 		
 		// Collide the hero with the blocks.
         game.physics.arcade.collide(this.hero, this.blocks, function(obj1,obj2){ this.collisionHandler(obj1,obj2); }, null, this);
-        
-        
+
         // Allow collisions between enemy and ground.
         game.physics.arcade.collide(this.enemy, this.ground);
         
         game.physics.arcade.collide(this.hero, this.enemy, this.delayOver, null, this);
-
-        
-        // Allow collisions between enemy and blocks.
-        //game.physics.arcade.collide(this.enemy, this.blocks);
-            
-    	// Get the first child. Add this to the update function.
-        var fchild = this.blocks.getChildAt(0);
-        // If off the screen reset the blocks.
-        if (fchild.x + 64 < 0) {
-            this.makeBlocks();
-        }
 
 
 /***
@@ -167,10 +161,22 @@ var StateMain = {
     	}
 ***/
 
+        for(var i=0; i<this.blocks.children.length;i++){
+            var fchild = this.blocks.children[i];
+            // The block is part of a group, so the x value is relative the to group x value. I placed the group at 0,0 so this should be irrelevant now.
+            if (fchild.x < 0 - fchild.width) {
+                //  Add and update the score
+                //this.score += 10;
+                //this.scoreText.text = this.score;
+                console.log('kill block',this.blocks.children.length);
+                fchild.destroy();
+                this.blocks.remove(fchild);
+            }
+        }
         
-        this.bg0.tilePosition.x -= 0.05;
-        this.bg1.tilePosition.x -= 0.3;
-        this.bg2.tilePosition.x -= 0.75;
+        this.bg0.tilePosition.x -= this.bgv0;
+        this.bg1.tilePosition.x -= this.bgv1;
+        this.bg2.tilePosition.x -= this.bgv2;
 
     },
     mouseDown: function() {
@@ -180,7 +186,7 @@ var StateMain = {
         }
     
 		// If we're not on the ground, no jumping
-		if (this.hero.y != this.startY) {
+		if (!this.hero.landed) {
 			return;
 		}
 
@@ -230,6 +236,10 @@ var StateMain = {
 	   
 	},
 	onGround: function() {
+        if (this.clickLock === true) {
+            return;
+        }
+
         if (this.hero)
         {
         	if(!this.hero.landed){
@@ -237,22 +247,13 @@ var StateMain = {
         		this.landSound.play();
         	}
 
-			if(this.hero.landed ){
-				if(this.hero.x > this.startX){
-					this.hero.body.velocity.x = -40;
-				}else{
-					this.hero.body.velocity.x = 0;
-					this.hero.x = this.startX;
-				}
-			}
-
             this.hero.animations.play('run');
         }        
     },
 	makeBlocks: function() {
 	
 		// Remove all the blocks from the group. You don't want to fill up memory.
-        this.blocks.removeAll();
+        //this.blocks.removeAll();
 	
 		var bStartX=game.width, bStartY=game.height-32-64;
 	
@@ -260,23 +261,30 @@ var StateMain = {
         
         block = game.add.sprite(bStartX, bStartY, "block");
         this.blocks.add(block);
-        block = game.add.sprite(bStartX, bStartY - ( 6 * 64 ), "block");
+        var offset = game.rnd.integerInRange(0,8);
+        block = game.add.sprite(bStartX + (offset * 32), bStartY - ( 6 * 64 ), "block");
         this.blocks.add(block);
 
         var wallHeight=game.rnd.integerInRange(2, 4);
+
         for (var i = 0; i < wallHeight; i++) {
         	rndPos = game.rnd.integerInRange(0,7);
-            block = game.add.sprite(bStartX, bStartY - ( rndPos * 64 ), "block");
+            offset = game.rnd.integerInRange(0,4);
+            block = game.add.sprite(bStartX + (offset * 32), bStartY - ( rndPos * 64 ), "block");
             this.blocks.add(block);
         }
         
-        		// Add this to the makeBlocks function
+        // Add this to the makeBlocks function
 	    // Loop through each block
         // and apply physics
         this.blocks.forEach(function(block) {
             //enable physics
             game.physics.enable(block, Phaser.Physics.ARCADE);
-            block.body.velocity.x = -150;
+            //block.allowGravity=false;
+            block.allowRotation=false;
+            block.body.immovable = true;
+            block.body.friction.x=0;
+            block.body.velocity.x = -128;
 
         });
         
@@ -301,20 +309,34 @@ var StateMain = {
     	// If the hero has collided with the front of the block, end the game.
     	if(hero.x + hero.width <= block.x){
 			this.delayOver();	
-    	}
+    	}else{
+
+            this.onGround();
+        }
     	return true;
     },
     delayOver: function() {
     	if(this.clicklock === true){
     		return;
     	}
-    	
+
+        for(var i=0; i<this.blocks.children.length;i++){
+            var fchild = this.blocks.children[i];
+            fchild.body.velocity.x = fchild.body.velocity.y = 0;
+
+            console.log('v',fchild.body.velocity.x);
+        }
+
+        this.bgv0 = this.bgv1 = this.bgv2=0;
+        this.hero.body.velocity.x = this.hero.body.velocity.y = 0;
     	this.dieSound.play();
         this.clickLock = true;
         this.hero.animations.play('die');
         game.time.events.add(Phaser.Timer.SECOND, this.gameOver, this);
     },
     gameOver: function() {
+
+
         game.state.start("StateOver");
     },
     render: function(){
