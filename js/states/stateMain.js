@@ -10,7 +10,8 @@ var StateMain = {
 
         game.load.image("bar", "images/main/powerbar.png");
         game.load.image("block", "images/main/Rocck.png");
-        
+        game.load.image("missile", "images/main/missile.png");
+
         game.load.audio("jump", "audio/sfx/jump.wav");
         game.load.audio("land", "audio/sfx/land.wav");
         game.load.audio("die", "audio/sfx/die.wav");
@@ -178,6 +179,8 @@ var StateMain = {
         this.bg1.tilePosition.x -= this.bgv1;
         this.bg2.tilePosition.x -= this.bgv2;
 
+        this.powerBar.y = this.hero.y -20;
+
     },
     mouseDown: function() {
     
@@ -256,37 +259,26 @@ var StateMain = {
         //this.blocks.removeAll();
 	
 		var bStartX=game.width, bStartY=game.height-32-64;
-	
         var rndPos, block;
-        
-        block = game.add.sprite(bStartX, bStartY, "block");
-        this.blocks.add(block);
         var offset = game.rnd.integerInRange(0,8);
-        block = game.add.sprite(bStartX + (offset * 32), bStartY - ( 6 * 64 ), "block");
+
+        block = new Block( bStartX + (offset * 64), bStartY - ( 6 * 64 ) );
+        this.blocks.add(block);
+
+        offset = game.rnd.integerInRange(0,8);
+        block = new Block( bStartX + (offset * 64), bStartY );
         this.blocks.add(block);
 
         var wallHeight=game.rnd.integerInRange(2, 4);
-
         for (var i = 0; i < wallHeight; i++) {
         	rndPos = game.rnd.integerInRange(0,7);
             offset = game.rnd.integerInRange(0,4);
-            block = game.add.sprite(bStartX + (offset * 32), bStartY - ( rndPos * 64 ), "block");
+
+            block = new Block( bStartX + (offset * 64), bStartY - ( rndPos * 64 ) );
+
             this.blocks.add(block);
         }
-        
-        // Add this to the makeBlocks function
-	    // Loop through each block
-        // and apply physics
-        this.blocks.forEach(function(block) {
-            //enable physics
-            game.physics.enable(block, Phaser.Physics.ARCADE);
-            //block.allowGravity=false;
-            block.allowRotation=false;
-            block.body.immovable = true;
-            block.body.friction.x=0;
-            block.body.velocity.x = -128;
 
-        });
         
         //this.makeEnemies();
     },
