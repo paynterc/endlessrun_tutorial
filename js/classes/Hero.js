@@ -7,10 +7,13 @@ class Hero extends Phaser.Sprite {
 		// Add gravity			
 		this.body.gravity.y = 200;	
 		this.body.collideWorldBounds = true;
+        this.body.friction.x=0;
 
-    	this.animations.add('run',this.makeArray(0,9),12,true);
+
+        this.animations.add('run',this.makeArray(0,9),12,true);
 		this.animations.add('jump',[0],12,false);
-		this.animations.add('die',this.makeArray(10,16),12,false);
+        this.animations.add('die',this.makeArray(10,15),12,false);
+        this.animations.add('kick',[16],12,false);
 		this.animations.play('run');
 		
 		this.landed=true;

@@ -73,7 +73,6 @@ var StateMain = {
 
 		// Hero is its own class now. See Hero.js.
 		this.hero = new Hero(game.width * .2, this.ground.y - this.pheight);
-        //this.hero.body.friction.x=0;
         this.heroXstart = this.hero.x;
 		
 		// Add the power bar at the top of the hero graphic. Add this code AFTER the this.hero line
@@ -82,9 +81,6 @@ var StateMain = {
 		// Set the powerbar width to zero. We won't be able to see it, but it's there!
 		this.powerBar.width = 0;
 
-        this.powerKick = game.add.sprite(-100, -100, "anmKick");
-        this.powerKick.animations.add('fly',[0,1,2,3,4,5],48,false);
-        game.physics.enable(this.powerKick, Phaser.Physics.ARCADE);
 
 
         // Turn the background sky blue.
@@ -93,18 +89,19 @@ var StateMain = {
 		// Add a listener for mouse down input.
 		game.input.onDown.add(this.mouseDown, this);
 
+        this.kicking=false;
         var kickKey = game.input.keyboard.addKey(Phaser.Keyboard.E);
         kickKey.onDown.add(this.doKick, this);
-        this.kicking=false;
 
         // Start the physics engine
         game.physics.startSystem(Phaser.Physics.ARCADE);
         
         // Enable the physics on the ground.
 		game.physics.enable(this.ground, Phaser.Physics.ARCADE);
-		
-		
-		//
+        this.ground.body.friction.x=0;
+
+
+        //
 		this.ground.body.immovable = true;
 		
 		
@@ -147,9 +144,9 @@ var StateMain = {
 
     update: function() {
 
-        if(this.hero.x<=this.heroXstart){
+        if(this.hero.x < this.heroXstart){
             this.hero.body.velocity.x = 0;
-            this.hero.x=this.heroXstart;
+            this.hero.x = this.heroXstart;
         }
     
     	// Allow collisions between hero and ground.
@@ -163,7 +160,6 @@ var StateMain = {
         
         game.physics.arcade.collide(this.hero, this.enemy, this.delayOver, null, this);
 
-        game.physics.arcade.collide(this.powerKick, this.blocks, function(obj1,obj2){ this.kickCollisionHandler(obj1,obj2); }, null, this);
 
 /***
     	for(let i=0; i<this.enemies.children.length;i++){
@@ -320,9 +316,7 @@ var StateMain = {
     	// If the hero has collided with the front of the block, end the game.
 
     	if(hero.x + hero.width <= block.x){
-			if(!this.kicking){
-                this.delayOver();
-            }
+            this.delayOver();
     	}else{
 
             this.onGround();
@@ -369,18 +363,12 @@ var StateMain = {
         this.kicking = true;
         this.kickSound.play();
 
-
-        this.powerKick.x=this.hero.x;
-        this.powerKick.y=this.hero.y-32;
-
+        this.hero.body.velocity.x=1000;
         this.hero.body.velocity.y=0;
-        this.hero.body.moves = false;
-        this.hero.alpha=0;
+        this.hero.body.gravity.y=0;
+        this.hero.animations.play('kick');
 
-
-        this.powerKick.animations.play('fly');
-        //this.powerKick.body.velocity.x = 1000;
-        this.kickTimer = game.time.events.add(Phaser.Timer.SECOND * .25, this.endKick, this);
+        this.kickTimer = game.time.events.add(Phaser.Timer.SECOND * .15, this.endKick, this);
         console.log('holdX',this.holdX);
         console.log('holdY',this.holdY);
 
@@ -388,14 +376,10 @@ var StateMain = {
     endKick: function() {
 
         game.time.events.remove(this.kickTimer);
+        this.hero.body.gravity.y=200;
+        this.hero.body.velocity.x=0;
         this.kicking=false;
 
-        this.hero.alpha=1;
-        this.hero.x = this.hero.x+116;
-
-        this.hero.body.moves = true;
-        this.powerKick.x = -100;
-        this.powerKick.y = -100;
 
     }
 }
