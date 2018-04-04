@@ -7,6 +7,7 @@ var StateMain = {
         game.load.image("ground", "images/main/ground.png");
         //game.load.image("hero", "images/main/hero.png");
         game.load.spritesheet("hero", 'images/main/hero_anim.png', 32, 32);
+        game.load.spritesheet("anmKick", "images/main/BoltKick.png", 128, 64);
 
         game.load.image("bar", "images/main/powerbar.png");
         game.load.image("block", "images/main/Rocck.png");
@@ -15,6 +16,7 @@ var StateMain = {
         game.load.audio("jump", "audio/sfx/jump.wav");
         game.load.audio("land", "audio/sfx/land.wav");
         game.load.audio("die", "audio/sfx/die.wav");
+        game.load.audio("kick", "audio/sfx/Laser_Shoot5.wav");
 
         game.load.image("bg0", "images/main/bg0.png");
         game.load.image("bg1", "images/main/bg1.png");
@@ -72,19 +74,29 @@ var StateMain = {
 		// Hero is its own class now. See Hero.js.
 		this.hero = new Hero(game.width * .2, this.ground.y - this.pheight);
         //this.hero.body.friction.x=0;
+        this.heroXstart = this.hero.x;
 		
 		// Add the power bar at the top of the hero graphic. Add this code AFTER the this.hero line
 		this.powerBar = game.add.sprite(this.hero.x, this.hero.y-20, "bar");
-		
+
 		// Set the powerbar width to zero. We won't be able to see it, but it's there!
 		this.powerBar.width = 0;
-		
-		// Turn the background sky blue.
+
+        this.powerKick = game.add.sprite(-100, -100, "anmKick");
+        this.powerKick.animations.add('fly',[0,1,2,3,4,5],48,false);
+        game.physics.enable(this.powerKick, Phaser.Physics.ARCADE);
+
+
+        // Turn the background sky blue.
 		game.stage.backgroundColor="#00ffff"; 
 		
 		// Add a listener for mouse down input.
 		game.input.onDown.add(this.mouseDown, this);
-                
+
+        var kickKey = game.input.keyboard.addKey(Phaser.Keyboard.E);
+        kickKey.onDown.add(this.doKick, this);
+        this.kicking=false;
+
         // Start the physics engine
         game.physics.startSystem(Phaser.Physics.ARCADE);
         
@@ -103,17 +115,16 @@ var StateMain = {
 		this.blocks = game.add.group();
         this.makeBlocks(); // Now write the makeBlocks function.
 		
-		// Record the initial position of the hero.
-		this.startY = this.hero.y;
-		this.startX = this.hero.x;
-		
+
+
 		// Use this to prevent clicking when game is over.
 		this.clickLock = false;
 
 		this.jumpSound = game.add.audio('jump',.25);
 		this.landSound = game.add.audio('land',.25);
-		this.dieSound = game.add.audio('die',.25);
-				
+        this.dieSound = game.add.audio('die',.25);
+        this.kickSound = game.add.audio('kick',.25);
+
 // 		this.jumpSound.volume = 0.25;
 // 		this.landSound.volume = 0.25;
 // 		this.dieSound.volume = 0.25;
@@ -135,6 +146,11 @@ var StateMain = {
     },
 
     update: function() {
+
+        if(this.hero.x<=this.heroXstart){
+            this.hero.body.velocity.x = 0;
+            this.hero.x=this.heroXstart;
+        }
     
     	// Allow collisions between hero and ground.
         game.physics.arcade.collide(this.hero, this.ground, this.onGround, null, this);
@@ -147,6 +163,7 @@ var StateMain = {
         
         game.physics.arcade.collide(this.hero, this.enemy, this.delayOver, null, this);
 
+        game.physics.arcade.collide(this.powerKick, this.blocks, function(obj1,obj2){ this.kickCollisionHandler(obj1,obj2); }, null, this);
 
 /***
     	for(let i=0; i<this.enemies.children.length;i++){
@@ -169,7 +186,7 @@ var StateMain = {
                 //  Add and update the score
                 //this.score += 10;
                 //this.scoreText.text = this.score;
-                console.log('kill block',this.blocks.children.length);
+
                 fchild.destroy();
                 this.blocks.remove(fchild);
             }
@@ -249,7 +266,9 @@ var StateMain = {
         		this.hero.landed=true;
         		this.landSound.play();
         	}
-
+            if(this.hero.x>this.heroXstart){
+                this.hero.body.velocity.x=-128;
+            }
             this.hero.animations.play('run');
         }        
     },
@@ -299,13 +318,21 @@ var StateMain = {
     },
     collisionHandler: function(hero,block) {
     	// If the hero has collided with the front of the block, end the game.
+
     	if(hero.x + hero.width <= block.x){
-			this.delayOver();	
+			if(!this.kicking){
+                this.delayOver();
+            }
     	}else{
 
             this.onGround();
         }
     	return true;
+    },
+    kickCollisionHandler: function(kick,block) {
+        block.destroy();
+        this.blocks.remove(block);
+        return true;
     },
     delayOver: function() {
     	if(this.clicklock === true){
@@ -333,6 +360,42 @@ var StateMain = {
     },
     render: function(){
         game.debug.text("Power: "  + this.power.toString(), 32, 32);
+
+    },
+    doKick: function() {
+        if(this.kicking){
+            return;
+        }
+        this.kicking = true;
+        this.kickSound.play();
+
+
+        this.powerKick.x=this.hero.x;
+        this.powerKick.y=this.hero.y-32;
+
+        this.hero.body.velocity.y=0;
+        this.hero.body.moves = false;
+        this.hero.alpha=0;
+
+
+        this.powerKick.animations.play('fly');
+        //this.powerKick.body.velocity.x = 1000;
+        this.kickTimer = game.time.events.add(Phaser.Timer.SECOND * .25, this.endKick, this);
+        console.log('holdX',this.holdX);
+        console.log('holdY',this.holdY);
+
+    },
+    endKick: function() {
+
+        game.time.events.remove(this.kickTimer);
+        this.kicking=false;
+
+        this.hero.alpha=1;
+        this.hero.x = this.hero.x+116;
+
+        this.hero.body.moves = true;
+        this.powerKick.x = -100;
+        this.powerKick.y = -100;
 
     }
 }
