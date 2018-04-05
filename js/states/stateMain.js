@@ -7,7 +7,7 @@ var StateMain = {
         game.load.image("ground", "images/main/ground.png");
         //game.load.image("hero", "images/main/hero.png");
         game.load.spritesheet("hero", 'images/main/hero_anim.png', 32, 32);
-        game.load.spritesheet("anmKick", "images/main/BoltKick.png", 128, 64);
+        game.load.spritesheet("bolt", "images/main/Bolt.png", 128, 64);
 
         game.load.image("bar", "images/main/powerbar.png");
         game.load.image("block", "images/main/Rocck.png");
@@ -70,8 +70,14 @@ var StateMain = {
         this.ground = new Phaser.Sprite(game, 0, game.height - 32, "ground", 0);
     	game.add.existing(this.ground);
 
+        this.bolt = new Phaser.Sprite(game, 0, 0, "bolt", 0);
+        this.bolt.animations.add('play',this.makeArray(0,5),24,true);
 
-		// Hero is its own class now. See Hero.js.
+        game.add.existing(this.bolt);
+
+
+
+        // Hero is its own class now. See Hero.js.
 		this.hero = new Hero(game.width * .2, this.ground.y - this.pheight);
         this.heroXstart = this.hero.x;
 		
@@ -89,9 +95,8 @@ var StateMain = {
 		// Add a listener for mouse down input.
 		game.input.onDown.add(this.mouseDown, this);
 
-        this.kicking=false;
         var kickKey = game.input.keyboard.addKey(Phaser.Keyboard.E);
-        kickKey.onDown.add(this.doKick, this);
+        kickKey.onDown.add(this.kickButton, this);
 
         // Start the physics engine
         game.physics.startSystem(Phaser.Physics.ARCADE);
@@ -125,8 +130,6 @@ var StateMain = {
 // 		this.jumpSound.volume = 0.25;
 // 		this.landSound.volume = 0.25;
 // 		this.dieSound.volume = 0.25;
-
-
 		
 		// Keep track of if the player is on the ground so we only play the landing sound once
 		this.hero.landed=true;
@@ -147,6 +150,15 @@ var StateMain = {
         if(this.hero.x < this.heroXstart){
             this.hero.body.velocity.x = 0;
             this.hero.x = this.heroXstart;
+        }
+
+
+        if(this.hero.kicking){
+            this.bolt.x=this.hero.x-64;
+            this.bolt.y=this.hero.y-16;
+        }else{
+            this.bolt.x=-100;
+            this.bolt.y=-100;
         }
     
     	// Allow collisions between hero and ground.
@@ -187,6 +199,7 @@ var StateMain = {
                 this.blocks.remove(fchild);
             }
         }
+
         
         this.bg0.tilePosition.x -= this.bgv0;
         this.bg1.tilePosition.x -= this.bgv1;
@@ -194,6 +207,14 @@ var StateMain = {
 
         this.powerBar.y = this.hero.y -20;
 
+    },
+    kickButton: function() {
+        if (this.clickLock === true) {
+            return;
+        }
+        this.kickSound.play();
+        this.bolt.animations.play('play');
+        this.hero.doKick();
     },
     mouseDown: function() {
     
@@ -356,30 +377,11 @@ var StateMain = {
         game.debug.text("Power: "  + this.power.toString(), 32, 32);
 
     },
-    doKick: function() {
-        if(this.kicking){
-            return;
+    makeArray: function(start,end) {
+        var myArray=[];
+        for (var i = start; i < end; i++) {
+            myArray.push(i);
         }
-        this.kicking = true;
-        this.kickSound.play();
-
-        this.hero.body.velocity.x=1000;
-        this.hero.body.velocity.y=0;
-        this.hero.body.gravity.y=0;
-        this.hero.animations.play('kick');
-
-        this.kickTimer = game.time.events.add(Phaser.Timer.SECOND * .15, this.endKick, this);
-        console.log('holdX',this.holdX);
-        console.log('holdY',this.holdY);
-
-    },
-    endKick: function() {
-
-        game.time.events.remove(this.kickTimer);
-        this.hero.body.gravity.y=200;
-        this.hero.body.velocity.x=0;
-        this.kicking=false;
-
-
+        return myArray;
     }
 }

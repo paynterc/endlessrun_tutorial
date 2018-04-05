@@ -1,5 +1,6 @@
 class Hero extends Phaser.Sprite {
     constructor(x,y) {
+
     	super(game,x,y,"hero",0);
 
 		game.physics.enable(this, Phaser.Physics.ARCADE);
@@ -17,7 +18,7 @@ class Hero extends Phaser.Sprite {
 		this.animations.play('run');
 		
 		this.landed=true;
-
+        this.kicking=false;
 
     	//add to stage right away
     	game.add.existing(this);
@@ -45,7 +46,33 @@ class Hero extends Phaser.Sprite {
         //console.log('myvar',StateMain.myvar);
         
     }
-    
+
+    doKick() {
+
+        if(this.kicking){
+            return;
+        }
+        this.kicking = true;
+
+        this.body.velocity.x=1000;
+        this.body.velocity.y=0;
+        this.body.gravity.y=0;
+        this.animations.play('kick');
+
+        this.kickTimer = game.time.events.add(Phaser.Timer.SECOND * .15, this.endKick, this);
+
+
+    }
+
+    endKick() {
+
+        game.time.events.remove(this.kickTimer);
+        this.body.gravity.y=200;
+        this.body.velocity.x=0;
+        this.kicking=false;
+
+    }
+
     update() {
     	// The update function will run every frame, even if you don't call it.
     	//this.angle += .5;
