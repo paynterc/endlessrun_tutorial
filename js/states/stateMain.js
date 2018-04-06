@@ -8,10 +8,13 @@ var StateMain = {
         //game.load.image("hero", "images/main/hero.png");
         game.load.spritesheet("hero", 'images/main/hero_anim.png', 32, 32);
         game.load.spritesheet("bolt", "images/main/Bolt.png", 128, 64);
+        game.load.spritesheet("gem", "images/main/Gem2.png",32,32);
+        game.load.spritesheet("boss1", "images/main/boss1.png",320,320);
 
         game.load.image("bar", "images/main/powerbar.png");
         game.load.image("block", "images/main/Rocck.png");
         game.load.image("missile", "images/main/missile.png");
+        game.load.image("shard", "images/main/Shard.png");
 
         game.load.audio("jump", "audio/sfx/jump.wav");
         game.load.audio("land", "audio/sfx/land.wav");
@@ -34,17 +37,22 @@ var StateMain = {
 		// Variables to contain the player height and width.
 		this.pheight = 32;
 		this.pwidth = 32;
-        
+
+        this.score=0;
+        this.scoreText = game.add.text(game.width * .50, 32, '0', { fontSize: '64px', fill: '#FFFFFF' });
+
         // I'm just putting this here to demonstrate how you can access state variables when in other classes.
         this.myvar = "HEYTHERE";
         
         // A variable to contain jump power.
         this.power = 0;
 
-    	// Add your background images first! Images appear in the order you added them, back to front.    	
+
+
+        // Add your background images first! Images appear in the order you added them, back to front.
     	// Create a tilesprite (x, y, width, height, key)
     	this.bg0 = this.game.add.tileSprite(0,
-			game.height - this.game.cache.getImage('bg0').height,
+			game.height - this.game.cache.getImage('bg0').height + 114,
 			game.width,
 			game.cache.getImage('bg0').height,
 			'bg0'
@@ -52,14 +60,14 @@ var StateMain = {
 
 
     	this.bg1 = this.game.add.tileSprite(0,
-			game.height - this.game.cache.getImage('bg1').height,
+			game.height - this.game.cache.getImage('bg1').height + 114,
 			game.width,
 			game.cache.getImage('bg1').height,
 			'bg1'
 		);
 		
 		this.bg2 = this.game.add.tileSprite(0,
-			game.height - this.game.cache.getImage('bg2').height,
+			game.height - this.game.cache.getImage('bg2').height +114,
 			game.width,
 			game.cache.getImage('bg2').height,
 			'bg2'
@@ -104,9 +112,6 @@ var StateMain = {
         // Enable the physics on the ground.
 		game.physics.enable(this.ground, Phaser.Physics.ARCADE);
         this.ground.body.friction.x=0;
-
-
-        //
 		this.ground.body.immovable = true;
 		
 		
@@ -140,9 +145,30 @@ var StateMain = {
 
 
         // Create blocks on a timer.
-        this.timer = game.time.events.loop(Phaser.Timer.SECOND * 5, this.makeBlocks, this);
+        this.blockTimer = game.time.events.loop(Phaser.Timer.SECOND * 5, this.makeBlocks, this);
 
-			
+        //this.bossTimer = game.time.events.add(Phaser.Timer.SECOND * 5, this.bossGo, this);
+
+        var bossKey = game.input.keyboard.addKey(Phaser.Keyboard.B);
+        bossKey.onDown.add(this.bossGo, this);
+    },
+
+    bossGo: function() {
+
+        game.time.events.remove(this.bossTimer);
+        this.boss1 = game.add.sprite(game.width/2 - (320/2),250, "boss1");
+        this.boss1.animations.add('wave',this.makeArray(0,4),12,true);
+        this.boss1.animations.play('wave');
+        this.boss1.sendToBack();
+
+        game.add.existing(this.boss1);
+
+        this.tweenBackground(0x00ffff,0xf44242,2000);
+        game.add.tween(this.boss1).to( { y: -32 }, 2000, Phaser.Easing.Linear.None, true);
+
+        game.time.events.remove(this.blockTimer);
+        this.rainTimer = game.time.events.loop(Phaser.Timer.SECOND * .5, this.makeRain, this);
+
     },
 
     update: function() {
@@ -190,11 +216,7 @@ var StateMain = {
         for(var i=0; i<this.blocks.children.length;i++){
             var fchild = this.blocks.children[i];
             // The block is part of a group, so the x value is relative the to group x value. I placed the group at 0,0 so this should be irrelevant now.
-            if (fchild.x < 0 - fchild.width) {
-                //  Add and update the score
-                //this.score += 10;
-                //this.scoreText.text = this.score;
-
+            if (fchild.x < 0 - fchild.width || fchild.y>game.height) {
                 fchild.destroy();
                 this.blocks.remove(fchild);
             }
@@ -256,7 +278,7 @@ var StateMain = {
 
 	   	// Stop listening for mouse up for now.
 	    game.input.onUp.remove(this.mouseUp, this);
-	                    this.hero.animations.play('jump');
+        this.hero.animations.play('jump');
 
 	    // Call our jump function
 	    this.hero.doJump(this.power);
@@ -318,6 +340,18 @@ var StateMain = {
         
         //this.makeEnemies();
     },
+    makeRain: function() {
+        var xx,yy,drop;
+
+
+        var dropCount=game.rnd.integerInRange(1, 2);
+        for (var i = 0; i < dropCount; i++) {
+            var xx=game.rnd.integerInRange(0,game.width-32);
+            var yy=0-64;
+            drop = new Rain( xx, yy );
+            this.blocks.add(drop);
+        }
+    },
     makeEnemies: function() {
     		
     		
@@ -336,10 +370,20 @@ var StateMain = {
     collisionHandler: function(hero,block) {
     	// If the hero has collided with the front of the block, end the game.
 
-    	if(hero.x + hero.width <= block.x){
+        if(block.type=="gem"){
+            block.destroy();
+            this.blocks.remove(block);
+            this.score+=10;
+            this.scoreText.text = this.score;
+
+            return true;
+        }
+        if(block.type=="rain"){
+            this.delayOver();
+        }else if(hero.x + hero.width <= block.x){
+            // Standard block. Only die if you hit the front of it.
             this.delayOver();
     	}else{
-
             this.onGround();
         }
     	return true;
@@ -350,15 +394,15 @@ var StateMain = {
         return true;
     },
     delayOver: function() {
-    	if(this.clicklock === true){
+    	if(this.clickLock){
     		return;
     	}
+        this.clickLock = true;
+        console.log("OVER");
 
         for(var i=0; i<this.blocks.children.length;i++){
             var fchild = this.blocks.children[i];
             fchild.body.velocity.x = fchild.body.velocity.y = 0;
-
-            console.log('v',fchild.body.velocity.x);
         }
 
         this.bgv0 = this.bgv1 = this.bgv2=0;
@@ -369,8 +413,6 @@ var StateMain = {
         game.time.events.add(Phaser.Timer.SECOND, this.gameOver, this);
     },
     gameOver: function() {
-
-
         game.state.start("StateOver");
     },
     render: function(){
@@ -383,5 +425,32 @@ var StateMain = {
             myArray.push(i);
         }
         return myArray;
+    },
+    tweenBackground: function(startColor, endColor, time = 250, delay = 0, callback = null){
+        // 0xf44242,0xffffff,2000,0,this.resetHeroColor
+        // create a step object
+        var colorBlend = {
+            step: 0
+        };
+
+        // create a tween to increment that step from 0 to 100.
+        var colorTween = game.add.tween(colorBlend).to({ step: 100 }, time, Phaser.Easing.Linear.None, delay);
+
+        // add an anonoymous function with lexical scope to change the tint, calling Phaser.Colour.interpolateColor
+        colorTween.onUpdateCallback(() => {
+            game.stage.backgroundColor = Phaser.Color.interpolateColor(startColor, endColor, 100, colorBlend.step);
+        });
+
+        // set object to the starting colour
+        game.stage.backgroundColor=startColor;
+
+
+        // if you passed a callback, add it to the tween on complete
+        if (callback) {
+            colorTween.onComplete.add(callback, this);
+        }
+
+        // finally, start the tween
+        colorTween.start();
     }
 }
