@@ -26,22 +26,28 @@ var StateLoad = {
         // game.load.image("heart", "images/main/heart.png");
         this.loadMain("heart");
         game.load.audio("backgroundMusic", "audio/background/LunarMoth.wav");
+        game.load.audio("bossMusic", "audio/background/showdown.wav");
+
+
+
         //game.load.audio("elephant","audio/sfx/elephant.mp3");
         this.loadSFX("elephant");
     },
-    loadMain(name) {
+    loadMain: function(name) {
         game.load.image(name, "images/main/" + name + ".png");
     },
-    loadSFX(name) {
+    loadSFX: function(name) {
         game.load.audio(name, "audio/sfx/" + name + ".mp3");
         model.regSound(name);
     },
-    loadSFX2(name) {
+    loadSFX2: function(name) {
         game.load.audio(name, "audio/sfx/" + name + ".wav");
         model.regSound(name);
     },
     create: function() {
         //pass the key for background music to the media manager
+        mediaManager.addMusic("backgroundMusic");
+        mediaManager.addMusic("bossMusic");
         mediaManager.setBackgroundMusic("backgroundMusic");
         //pass sound keys to the media manager
         //a sound object will be created

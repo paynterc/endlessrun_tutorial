@@ -33,8 +33,12 @@ var StateMain = {
         // Keep this line
         // to tell the game what state we are in!
         model.state = "main";
-        
-		// Variables to contain the player height and width.
+
+        mediaManager.setBackgroundMusic("backgroundMusic");
+        var soundButtons = new SoundButtons();
+
+
+        // Variables to contain the player height and width.
 		this.pheight = 32;
 		this.pwidth = 32;
 
@@ -154,7 +158,8 @@ var StateMain = {
     },
 
     bossGo: function() {
-
+        mediaManager.restartMusic("bossMusic");
+        mediaManager.setBackgroundMusicFadeIn("bossMusic");
         game.time.events.remove(this.bossTimer);
         this.boss1 = game.add.sprite(game.width/2 - (320/2),250, "boss1");
         this.boss1.animations.add('wave',this.makeArray(0,4),12,true);
