@@ -8,18 +8,24 @@ var StateMain = {
         //game.load.image("hero", "images/main/hero.png");
         game.load.spritesheet("hero", 'images/main/hero_anim.png', 32, 32);
         game.load.spritesheet("bolt", "images/main/Bolt.png", 128, 64);
+        game.load.spritesheet("firebolt", "images/main/firebolt.png", 128, 64);
         game.load.spritesheet("gem", "images/main/Gem2.png",32,32);
         game.load.spritesheet("boss1", "images/main/boss1.png",320,320);
+        game.load.spritesheet("flopper", "images/main/flopper.png",32,32);
+        game.load.spritesheet("fireball", "images/main/fireball.png",64,64);
 
         game.load.image("bar", "images/main/powerbar.png");
         game.load.image("block", "images/main/Rocck.png");
         game.load.image("missile", "images/main/missile.png");
         game.load.image("shard", "images/main/Shard.png");
+        game.load.image("powerup", "images/main/PowerUp.png");
 
         game.load.audio("jump", "audio/sfx/jump.wav");
         game.load.audio("land", "audio/sfx/land.wav");
         game.load.audio("die", "audio/sfx/die.wav");
         game.load.audio("kick", "audio/sfx/Laser_Shoot5.wav");
+        game.load.audio("explosion", "audio/sfx/Explosion5.wav");
+        game.load.audio("pwrup", "audio/sfx/Powerup7.wav");
 
         game.load.image("bg0", "images/main/bg0.png");
         game.load.image("bg1", "images/main/bg1.png");
@@ -34,6 +40,8 @@ var StateMain = {
         // to tell the game what state we are in!
         model.state = "main";
 
+        this.boss1Started = false;
+
         mediaManager.setBackgroundMusic("backgroundMusic");
         var soundButtons = new SoundButtons();
 
@@ -44,6 +52,8 @@ var StateMain = {
 
         this.score=0;
         this.scoreText = game.add.text(game.width * .50, 32, '0', { fontSize: '64px', fill: '#FFFFFF' });
+
+        this.helpText = game.add.text(16, game.height-30, "Hold Left Mouse to jump. Press 'E' to kick", { fontSize: '24px', fill: '#FFFFFF' });
 
         // I'm just putting this here to demonstrate how you can access state variables when in other classes.
         this.myvar = "HEYTHERE";
@@ -84,10 +94,12 @@ var StateMain = {
 
         this.bolt = new Phaser.Sprite(game, 0, 0, "bolt", 0);
         this.bolt.animations.add('play',this.makeArray(0,5),24,true);
-
         game.add.existing(this.bolt);
 
-
+        this.fireball = new Phaser.Sprite(game, 0, 0, "fireball", 0);
+        this.fireball.animations.add('play',this.makeArray(0,4),12,true);
+        this.fireball.animations.play('play');
+        game.add.existing(this.fireball);
 
         // Hero is its own class now. See Hero.js.
 		this.hero = new Hero(game.width * .2, this.ground.y - this.pheight);
@@ -135,6 +147,8 @@ var StateMain = {
 		this.landSound = game.add.audio('land',.25);
         this.dieSound = game.add.audio('die',.25);
         this.kickSound = game.add.audio('kick',.25);
+        this.explodeSound = game.add.audio('explosion',.25);
+        this.powerupSound = game.add.audio('pwrup',.25);
 
 // 		this.jumpSound.volume = 0.25;
 // 		this.landSound.volume = 0.25;
@@ -149,18 +163,27 @@ var StateMain = {
 
 
         // Create blocks on a timer.
-        this.blockTimer = game.time.events.loop(Phaser.Timer.SECOND * 5, this.makeBlocks, this);
+        this.blocksGo();
 
-        //this.bossTimer = game.time.events.add(Phaser.Timer.SECOND * 5, this.bossGo, this);
+        this.powerUpTimer = game.time.events.loop(Phaser.Timer.SECOND * 10, this.makePowerUp, this);
 
         var bossKey = game.input.keyboard.addKey(Phaser.Keyboard.B);
-        bossKey.onDown.add(this.bossGo, this);
-    },
+        bossKey.onDown.add(this.boss1Go, this);
 
-    bossGo: function() {
+        this.helpText.bringToTop();
+
+    },
+    blocksGo: function() {
+
+        this.blockTimer = game.time.events.loop(Phaser.Timer.SECOND * 5, this.makeBlocks, this);
+
+    },
+    boss1Go: function() {
+
+        this.boss1Started = true;
+
         mediaManager.restartMusic("bossMusic");
         mediaManager.setBackgroundMusicFadeIn("bossMusic");
-        game.time.events.remove(this.bossTimer);
         this.boss1 = game.add.sprite(game.width/2 - (320/2),250, "boss1");
         this.boss1.animations.add('wave',this.makeArray(0,4),12,true);
         this.boss1.animations.play('wave');
@@ -173,10 +196,35 @@ var StateMain = {
 
         game.time.events.remove(this.blockTimer);
         this.rainTimer = game.time.events.loop(Phaser.Timer.SECOND * .5, this.makeRain, this);
+        this.boss1StopTimer = game.time.events.add(Phaser.Timer.SECOND * 20, this.boss1Stop, this);
+
 
     },
+    boss1Stop: function() {
+        mediaManager.setBackgroundMusicFadeIn("backgroundMusic");
 
+        game.time.events.remove(this.boss1StopTimer);
+
+
+        game.add.existing(this.boss1);
+
+        this.tweenBackground(0xf44242,0x00ffff,2000);
+        game.add.tween(this.boss1).to( { y: 250 }, 2000, Phaser.Easing.Linear.None, true);
+
+        game.time.events.remove(this.rainTimer);
+
+        this.blocksGo();
+    },
     update: function() {
+
+        if(this.hero.onfire && !this.hero.kicking){
+            this.fireball.x= (this.hero.x + this.hero.width/2) - this.fireball.width/2;
+            this.fireball.y=this.hero.y - this.fireball.width *.5;
+        }else{
+            this.fireball.x=-100;
+            this.fireball.y=-100;
+        }
+
 
         if(this.hero.x < this.heroXstart){
             this.hero.body.velocity.x = 0;
@@ -202,6 +250,8 @@ var StateMain = {
         game.physics.arcade.collide(this.enemy, this.ground);
         
         game.physics.arcade.collide(this.hero, this.enemy, this.delayOver, null, this);
+
+        game.physics.arcade.collide(this.blocks, this.ground);
 
 
 /***
@@ -233,6 +283,8 @@ var StateMain = {
         this.bg2.tilePosition.x -= this.bgv2;
 
         this.powerBar.y = this.hero.y -20;
+        this.powerBar.x = this.hero.x -20;
+
 
     },
     kickButton: function() {
@@ -351,11 +403,15 @@ var StateMain = {
 
         var dropCount=game.rnd.integerInRange(1, 2);
         for (var i = 0; i < dropCount; i++) {
-            var xx=game.rnd.integerInRange(0,game.width-32);
-            var yy=0-64;
+            xx=game.rnd.integerInRange(0,game.width-32);
+            yy=0-64;
             drop = new Rain( xx, yy );
             this.blocks.add(drop);
         }
+    },
+    makePowerUp: function() {
+        var powerup = new PowerUp( game.width+64, -64 );
+        this.blocks.add(powerup);
     },
     makeEnemies: function() {
     		
@@ -373,30 +429,62 @@ var StateMain = {
 
     },
     collisionHandler: function(hero,block) {
-    	// If the hero has collided with the front of the block, end the game.
+        // If the hero has collided with the front of the block, end the game.
 
-        if(block.type=="gem"){
+        if (block.type == "gem") {
             block.destroy();
             this.blocks.remove(block);
-            this.score+=10;
-            this.scoreText.text = this.score;
-
+            this.powerupSound.play();
+            this.updateScore(10);
             return true;
-        }
-        if(block.type=="rain"){
+
+        } else if(block.type=="powerup"){
+
+            block.destroy();
+            this.blocks.remove(block);
+            this.setFire();
+
+        }else if(block.type=="rain"){
             this.delayOver();
         }else if(hero.x + hero.width <= block.x){
             // Standard block. Only die if you hit the front of it.
-            this.delayOver();
+            if( this.hero.onfire ){
+                this.explodeSound.play();
+                this.updateScore(15);
+                block.destroy();
+                this.blocks.remove(block);
+            }else{
+                this.delayOver();
+            }
     	}else{
             this.onGround();
         }
     	return true;
     },
-    kickCollisionHandler: function(kick,block) {
-        block.destroy();
-        this.blocks.remove(block);
-        return true;
+    updateScore: function(points){
+        this.score += points;
+        this.scoreText.text = this.score;
+        if(this.score > 100 && !this.boss1Started){
+            this.boss1Go();
+        }
+
+    },
+    setFire: function(){
+
+        this.helpText.setText("You can break blocks when on fire.");
+        game.time.events.remove(this.fireTimer);
+
+        this.hero.onfire=true;
+        this.bolt.loadTexture("firebolt");
+        this.powerupSound.play();
+
+        this.fireTimer =  game.time.events.add(Phaser.Timer.SECOND * 10, this.offFire, this);
+
+    },
+    offFire: function(){
+        game.time.events.remove(this.fireTimer);
+        this.hero.onfire=false;
+        this.bolt.loadTexture("bolt");
     },
     delayOver: function() {
     	if(this.clickLock){

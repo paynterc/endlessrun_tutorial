@@ -8,9 +8,9 @@ class Block extends Phaser.Sprite {
         var type="block";
 
         if(r==8){
-            img = "missile";
+            img = "flopper";
             spd = -250;
-            type="missle";
+            type="missile";
         }
 
         if(r==7){
@@ -22,6 +22,11 @@ class Block extends Phaser.Sprite {
         this.type=type;
         if(this.type=="gem"){
             this.animations.add('play',[0,1,2],12,true);
+            this.animations.play('play');
+        }
+
+        if(this.type=="missile"){
+            this.animations.add('play',[0,1,2,3,4,5],9,true);
             this.animations.play('play');
         }
 

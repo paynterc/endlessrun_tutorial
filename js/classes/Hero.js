@@ -19,6 +19,7 @@ class Hero extends Phaser.Sprite {
 		
 		this.landed=true;
         this.kicking=false;
+        this.onfire=false;
 
     	//add to stage right away
     	game.add.existing(this);
