@@ -13,12 +13,13 @@ var StateMain = {
         game.load.spritesheet("boss1", "images/main/boss1.png",320,320);
         game.load.spritesheet("flopper", "images/main/flopper.png",32,32);
         game.load.spritesheet("fireball", "images/main/fireball.png",64,64);
+        game.load.spritesheet("powerup", "images/main/PwrUp1.png",32,32);
 
         game.load.image("bar", "images/main/powerbar.png");
         game.load.image("block", "images/main/Rocck.png");
         game.load.image("missile", "images/main/missile.png");
         game.load.image("shard", "images/main/Shard.png");
-        game.load.image("powerup", "images/main/PowerUp.png");
+        //game.load.image("powerup", "images/main/PowerUp.png");
 
         game.load.audio("jump", "audio/sfx/jump.wav");
         game.load.audio("land", "audio/sfx/land.wav");
@@ -74,14 +75,14 @@ var StateMain = {
 
 
     	this.bg1 = this.game.add.tileSprite(0,
-			game.height - this.game.cache.getImage('bg1').height + 114,
+			game.height - this.game.cache.getImage('bg1').height + 214,
 			game.width,
 			game.cache.getImage('bg1').height,
 			'bg1'
 		);
 		
 		this.bg2 = this.game.add.tileSprite(0,
-			game.height - this.game.cache.getImage('bg2').height +114,
+			game.height - this.game.cache.getImage('bg2').height +248,
 			game.width,
 			game.cache.getImage('bg2').height,
 			'bg2'
@@ -114,8 +115,8 @@ var StateMain = {
 
 
         // Turn the background sky blue.
-		game.stage.backgroundColor="#00ffff"; 
-		
+		game.stage.backgroundColor="#96E6f6";
+
 		// Add a listener for mouse down input.
 		game.input.onDown.add(this.mouseDown, this);
 
@@ -124,23 +125,17 @@ var StateMain = {
 
         // Start the physics engine
         game.physics.startSystem(Phaser.Physics.ARCADE);
-        
+
         // Enable the physics on the ground.
 		game.physics.enable(this.ground, Phaser.Physics.ARCADE);
         this.ground.body.friction.x=0;
 		this.ground.body.immovable = true;
-		
-		
-        this.enemies = game.add.group();
-        //this.makeEnemies();
-		
-		// Add blocks
-		this.blocks = game.add.group();
-        this.makeBlocks(); // Now write the makeBlocks function.
-		
 
 
-		// Use this to prevent clicking when game is over.
+
+
+
+        // Use this to prevent clicking when game is over.
 		this.clickLock = false;
 
 		this.jumpSound = game.add.audio('jump',.25);
@@ -153,7 +148,7 @@ var StateMain = {
 // 		this.jumpSound.volume = 0.25;
 // 		this.landSound.volume = 0.25;
 // 		this.dieSound.volume = 0.25;
-		
+
 		// Keep track of if the player is on the ground so we only play the landing sound once
 		this.hero.landed=true;
 
@@ -162,19 +157,24 @@ var StateMain = {
         this.bgv2=0.75;
 
 
-        // Create blocks on a timer.
-        this.blocksGo();
-
-        this.powerUpTimer = game.time.events.loop(Phaser.Timer.SECOND * 10, this.makePowerUp, this);
-
         var bossKey = game.input.keyboard.addKey(Phaser.Keyboard.B);
         bossKey.onDown.add(this.boss1Go, this);
 
         this.helpText.bringToTop();
 
+
+        // Add blocks
+        this.blocks = game.add.group();
+        this.blocksGo();
+
+        this.powerUps = game.add.group();
+        this.powerUpTimer = game.time.events.loop(Phaser.Timer.SECOND * 10, this.makePowerUp, this);
+
     },
     blocksGo: function() {
-
+        if(this.blockTimer){
+            game.time.events.remove(this.blockTimer);
+        }
         this.blockTimer = game.time.events.loop(Phaser.Timer.SECOND * 5, this.makeBlocks, this);
 
     },
@@ -182,8 +182,13 @@ var StateMain = {
 
         this.boss1Started = true;
 
+        if(this.boss1){
+            this.boss1.destroy();
+        }
+
         mediaManager.restartMusic("bossMusic");
         mediaManager.setBackgroundMusicFadeIn("bossMusic");
+
         this.boss1 = game.add.sprite(game.width/2 - (320/2),250, "boss1");
         this.boss1.animations.add('wave',this.makeArray(0,4),12,true);
         this.boss1.animations.play('wave');
@@ -191,7 +196,7 @@ var StateMain = {
 
         game.add.existing(this.boss1);
 
-        this.tweenBackground(0x00ffff,0xf44242,2000);
+        this.tweenBackground(0x96E6f6,0xf44242,2000);
         game.add.tween(this.boss1).to( { y: -32 }, 2000, Phaser.Easing.Linear.None, true);
 
         game.time.events.remove(this.blockTimer);
@@ -209,7 +214,7 @@ var StateMain = {
         game.add.existing(this.boss1);
 
         this.tweenBackground(0xf44242,0x00ffff,2000);
-        game.add.tween(this.boss1).to( { y: 250 }, 2000, Phaser.Easing.Linear.None, true);
+        game.add.tween(this.boss1).to( { y: 400 }, 2000, Phaser.Easing.Linear.None, true);
 
         game.time.events.remove(this.rainTimer);
 
@@ -242,17 +247,17 @@ var StateMain = {
     
     	// Allow collisions between hero and ground.
         game.physics.arcade.collide(this.hero, this.ground, this.onGround, null, this);
-		
-		// Collide the hero with the blocks.
-        game.physics.arcade.collide(this.hero, this.blocks, function(obj1,obj2){ this.collisionHandler(obj1,obj2); }, null, this);
 
-        // Allow collisions between enemy and ground.
         game.physics.arcade.collide(this.enemy, this.ground);
         
         game.physics.arcade.collide(this.hero, this.enemy, this.delayOver, null, this);
 
-        game.physics.arcade.collide(this.blocks, this.ground);
+        game.physics.arcade.collide(this.powerUps, this.ground);
 
+        // Collide the hero with the blocks.
+        game.physics.arcade.collide(this.hero, this.blocks, function(obj1,obj2){ this.collisionHandlerBlock(obj1,obj2); }, null, this);
+        // Collide the hero with the powerUps.
+        game.physics.arcade.collide(this.hero, this.powerUps, function(obj1,obj2){ this.collisionHandlerPowerUp(obj1,obj2); }, null, this);
 
 /***
     	for(let i=0; i<this.enemies.children.length;i++){
@@ -410,8 +415,9 @@ var StateMain = {
         }
     },
     makePowerUp: function() {
-        var powerup = new PowerUp( game.width+64, -64 );
-        this.blocks.add(powerup);
+        var rnd = game.rnd.integerInRange(64,128)
+        var powerup = new PowerUp( game.width+64, rnd * -1 );
+        this.powerUps.add(powerup);
     },
     makeEnemies: function() {
     		
@@ -428,7 +434,7 @@ var StateMain = {
     		}
 
     },
-    collisionHandler: function(hero,block) {
+    collisionHandlerBlock: function(hero,block) {
         // If the hero has collided with the front of the block, end the game.
 
         if (block.type == "gem") {
@@ -438,14 +444,17 @@ var StateMain = {
             this.updateScore(10);
             return true;
 
-        } else if(block.type=="powerup"){
-
-            block.destroy();
-            this.blocks.remove(block);
-            this.setFire();
-
         }else if(block.type=="rain"){
-            this.delayOver();
+
+            if( this.hero.onfire ){
+                this.explodeSound.play();
+                this.updateScore(15);
+                block.destroy();
+                this.blocks.remove(block);
+            }else{
+                this.delayOver();
+            }
+
         }else if(hero.x + hero.width <= block.x){
             // Standard block. Only die if you hit the front of it.
             if( this.hero.onfire ){
@@ -460,6 +469,11 @@ var StateMain = {
             this.onGround();
         }
     	return true;
+    },
+    collisionHandlerPowerUp: function(hero,pwr) {
+        pwr.destroy();
+        this.powerUps.remove(pwr);
+        this.setFire();
     },
     updateScore: function(points){
         this.score += points;
